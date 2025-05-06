@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frame Extrator Profissional</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e63946;
+      --secondary: #1d3557;
+      --accent: #a8dadc;
+      --bg: #0b0c10;
+      --fg: #f1faee;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--fg);
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .container {
+      margin-top: 6rem;
+      background-color: #1a1a1a;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      background-color: #2b2b2b;
+      border: 2px dashed var(--accent);
+      color: var(--fg);
+      padding: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    video {
+      width: 100%;
+      margin-top: 1rem;
+      border-radius: 8px;
+      background: #000;
+    }
+
+    .controls {
+      margin-top: 1.5rem;
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .controls label {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    button {
+      padding: 0.75rem;
+      font-size: 1rem;
+      background: var(--primary);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #b92d3b;
+    }
+
+    canvas {
+      width: 100%;
+      margin-top: 1rem;
+      border-radius: 8px;
+      background: #000;
+      display: none;
+    }
+
+    a.downloadLink {
+      display: none;
+      margin-top: 1.25rem;
+      text-align: center;
+      background: var(--secondary);
+      color: white;
+      padding: 0.75rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header>Frame Extrator Profissional</header>
+  <div class="container">
+    <h1>Extrair Frame de Vídeo</h1>
+    <input type="file" id="videoInput" accept="video/*" />
+    <video id="videoPlayer" controls hidden></video>
+    <div class="controls" id="controls">
+      <label for="timeRange">Tempo do frame: <span id="timeLabel">0:00</span></label>
+      <input type="range" id="timeRange" min="0" max="0" step="0.1" value="0" />
+      <button id="extractBtn">Extrair Frame</button>
+    </div>
+    <canvas id="canvasOutput"></canvas>
+    <a id="downloadLink" class="downloadLink" download="frame.png">Baixar Frame</a>
+  </div>
+
+  <script>
+    const videoInput = document.getElementById('videoInput');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const controls = document.getElementById('controls');
+    const timeRange = document.getElementById('timeRange');
+    const timeLabel = document.getElementById('timeLabel');
+    const extractBtn = document.getElementById('extractBtn');
+    const canvasOutput = document.getElementById('canvasOutput');
+    const ctx = canvasOutput.getContext('2d');
+    const downloadLink = document.getElementById('downloadLink');
+
+    videoInput.addEventListener('change', () => {
+      const file = videoInput.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      videoPlayer.src = url;
+      videoPlayer.hidden = false;
+      controls.style.display = 'flex';
+      canvasOutput.style.display = 'none';
+      downloadLink.style.display = 'none';
+
+      videoPlayer.addEventListener('loadedmetadata', () => {
+        timeRange.max = videoPlayer.duration;
+        timeRange.value = 0;
+        timeLabel.textContent = formatTime(0);
+      });
+    });
+
+    timeRange.addEventListener('input', () => {
+      const t = parseFloat(timeRange.value);
+      timeLabel.textContent = formatTime(t);
+      videoPlayer.currentTime = t;
+    });
+
+    extractBtn.addEventListener('click', () => {
+      canvasOutput.width = videoPlayer.videoWidth;
+      canvasOutput.height = videoPlayer.videoHeight;
+      ctx.drawImage(videoPlayer, 0, 0, canvasOutput.width, canvasOutput.height);
+      canvasOutput.style.display = 'block';
+
+      canvasOutput.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        downloadLink.href = url;
+        downloadLink.style.display = 'block';
+      }, 'image/png');
+    });
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+  </script>
+</body>
+</html>
